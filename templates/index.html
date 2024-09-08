@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whatif in History</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div id="app">
+        <h1>Whatif in History</h1>
+        <div id="input-container">
+            <input type="text" id="whatif-input" placeholder="What if ______ didn't happen?">
+            <button id="submit-btn">Submit</button>
+        </div>
+        <div id="loading-animation" class="hidden">
+            <div class="clock"></div>
+        </div>
+        <div id="response-container" class="hidden"></div>
+        <button id="share-btn" class="hidden">Share</button>
+        <div id="inspiration-container">
+            <h2>Need Inspiration?</h2>
+            <div id="inspiration-questions"></div>
+        </div>
+    </div>
+    <script src="/static/app.js"></script>
+</body>
+</html>
