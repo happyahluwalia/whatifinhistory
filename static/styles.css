@@ -67,72 +67,60 @@ h1 {
 
 .timeline-container {
     position: relative;
-    height: 300px;
-    margin: 3rem 0;
+    margin: 2rem 0;
+    padding: 2rem 0;
 }
 
 .timeline {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    width: 4px;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
     background-color: var(--primary-color);
-    transform: translateX(-50%);
 }
 
 .example-questions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     position: relative;
-    height: 100%;
+    z-index: 1;
 }
 
 .question-bubble {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: var(--secondary-color);
-    color: white;
-    padding: 1rem;
-    border-radius: 20px;
-    font-size: 1rem;
-    max-width: 250px;
-    text-align: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+    background-color: white;
+    border: 2px solid var(--primary-color);
+    border-radius: 15px;
+    padding: 0.75rem;
     cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    width: 30%;
+    text-align: center;
 }
-
-.question-bubble:nth-child(1) { top: 10%; }
-.question-bubble:nth-child(2) { top: 50%; }
-.question-bubble:nth-child(3) { top: 90%; }
 
 .question-bubble:hover {
-    transform: translateX(-50%) scale(1.05);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
-.question-bubble .year {
-    position: absolute;
-    left: -60px;
-    top: 50%;
-    transform: translateY(-50%);
-    background-color: var(--primary-color);
-    color: white;
-    padding: 0.3rem 0.6rem;
-    border-radius: 15px;
-    font-size: 0.8rem;
+.year {
+    display: block;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 0.3rem;
 }
 
-.question-bubble::before {
-    content: '';
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    background-color: var(--secondary-color);
-    border-radius: 50%;
-    left: -60px;
-    top: 50%;
-    transform: translateY(-50%);
+.question-text {
+    font-size: 0.9rem;
+    display: block;
+    word-wrap: break-word;
+}
+
+.outro-text {
+    font-size: 1rem;
+    text-align: center;
+    margin-top: 2rem;
 }
 
 @media (max-width: 768px) {
@@ -479,17 +467,6 @@ h1 {
     #response-container {
         padding-left: 0;
     }
-
-    .event-year {
-        position: relative;
-        left: 0;
-        display: inline-block;
-        margin-bottom: 0.5rem;
-    }
-
-    .event-content {
-        padding-left: 0;
-    }
 }
 
 .hidden {
@@ -499,3 +476,22 @@ h1 {
 #loading-animation.show {
     display: flex;
 }
+
+.compact-intro {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.compact-intro h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.compact-intro .intro-text {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+

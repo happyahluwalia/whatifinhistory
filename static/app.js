@@ -10,6 +10,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Add event listeners to question bubbles
+    const questionBubbles = document.querySelectorAll('.question-bubble');
+    questionBubbles.forEach(bubble => {
+        bubble.addEventListener('click', () => {
+            const question = bubble.getAttribute('data-question');
+            input.value = question;
+            input.focus();
+        });
+    });
+
     function fetchInspirationQuestions() {
         fetch('/get_inspiration_questions')
             .then(response => response.json())

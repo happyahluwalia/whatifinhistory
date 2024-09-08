@@ -75,27 +75,29 @@ def submit_question():
     Analysis: Provide a brief analysis of the overall impact of this change on history.
     """
 
-    response = client.chat.completions.create(
-        model="mixtral-8x7b-32768",
-        messages=[
-            {"role": "system", "content": "You are a historian specializing in alternate history scenarios."},
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=1000,
-        temperature=0.7
-    )
+    try:
+        response = client.chat.completions.create(
+            model="mixtral-8x7b-32768",
+            messages=[
+                {"role": "system", "content": "You are a historian specializing in alternate history scenarios."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=1000,
+            temperature=0.7
+        )
 
-    return jsonify({'response': response.choices[0].message.content})
+        # Store the question in the database
+        conn = sqlite3.connect('whatifdatabase.sqlite')
+        c = conn.cursor()
+        c.execute("INSERT INTO questions (prompt, created_at) VALUES (?, ?)", 
+                  (cleaned_question, datetime.now()))
+        conn.commit()
+        conn.close()
 
-@app.route('/get_background_questions', methods=['GET'])
-def get_background_questions():
-    conn = sqlite3.connect('whatifdatabase.sqlite')
-    c = conn.cursor()
-    c.execute("SELECT prompt FROM questions ORDER BY RANDOM() LIMIT 20")
-    questions = [row[0] for row in c.fetchall()]
-    conn.close()
-    
-    return jsonify({'questions': questions})
+        return jsonify({'response': response.choices[0].message.content})
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        abort(500, description="An error occurred while processing your request")
 
 @app.route('/get_inspiration_questions', methods=['GET'])
 @limiter.limit("10 per minute")
