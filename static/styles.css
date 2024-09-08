@@ -266,22 +266,122 @@ h1 {
 }
 
 #loading-animation {
-    text-align: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: none;  /* Change this from 'flex' to 'none' */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
 }
 
-.clock {
-    width: 50px;
-    height: 50px;
-    border: 5px solid var(--primary-color);
-    border-top: 5px solid transparent;
+.time-machine {
+    width: 200px;
+    height: 200px;
+    position: relative;
+}
+
+.clock-face {
+    width: 100%;
+    height: 100%;
+    border: 10px solid var(--primary-color);
     border-radius: 50%;
-    margin: 2rem auto;
-    animation: spin 1s linear infinite;
+    position: relative;
 }
 
-@keyframes spin {
+.hand {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-origin: 50% 100%;
+    background-color: var(--secondary-color);
+}
+
+.hour-hand {
+    width: 6px;
+    height: 60px;
+    margin-left: -3px;
+}
+
+.minute-hand {
+    width: 4px;
+    height: 80px;
+    margin-left: -2px;
+}
+
+.second-hand {
+    width: 2px;
+    height: 90px;
+    margin-left: -1px;
+    background-color: #e74c3c;
+}
+
+.gears {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.gear {
+    position: absolute;
+    border-radius: 50%;
+    border: 5px solid var(--primary-color);
+}
+
+.gear1 {
+    width: 60px;
+    height: 60px;
+    top: 20px;
+    left: 20px;
+    animation: rotate 4s linear infinite reverse;
+}
+
+.gear2 {
+    width: 40px;
+    height: 40px;
+    bottom: 30px;
+    right: 30px;
+    animation: rotate 3s linear infinite;
+}
+
+.gear3 {
+    width: 30px;
+    height: 30px;
+    bottom: 70px;
+    left: 50px;
+    animation: rotate 2s linear infinite reverse;
+}
+
+@keyframes rotate {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+@keyframes moveHandsBackward {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-360deg); }
+}
+
+.hour-hand { animation: moveHandsBackward 6s linear infinite; }
+.minute-hand { animation: moveHandsBackward 3s linear infinite; }
+.second-hand { animation: moveHandsBackward 1s linear infinite; }
+
+.loading-text {
+    color: white;
+    font-size: 1.2rem;
+    margin-top: 20px;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 
 #response-section {
@@ -394,4 +494,8 @@ h1 {
 
 .hidden {
     display: none;
+}
+
+#loading-animation.show {
+    display: flex;
 }

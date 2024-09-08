@@ -70,7 +70,7 @@ def submit_question():
     Consequences:
     - List the first major consequence here.
     - List the second major consequence here.
-    - Continue with 3-5 major consequences, each on a new line starting with a dash (-).
+    - Continue with 1-3 major consequences, each on a new line starting with a dash (-).
 
     Analysis: Provide a brief analysis of the overall impact of this change on history.
     """

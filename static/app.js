@@ -2,9 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('whatif-input');
     const submitBtn = document.getElementById('submit-btn');
     const loadingAnimation = document.getElementById('loading-animation');
-    const responseContainer = document.getElementById('response-container');
-    const inspirationQuestions = document.getElementById('inspiration-questions');
-    const questionBubbles = document.querySelectorAll('.question-bubble');
 
     submitBtn.addEventListener('click', handleSubmit);
     input.addEventListener('keypress', (e) => {
@@ -13,22 +10,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Add click event listeners to question bubbles
-    questionBubbles.forEach(bubble => {
-        bubble.addEventListener('click', () => {
-            const question = bubble.getAttribute('data-question');
-            input.value = question;
-            input.focus();
-        });
-    });
+    function fetchInspirationQuestions() {
+        fetch('/get_inspiration_questions')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Inspiration data received:', data);
+                const inspirationContainer = document.getElementById('inspiration-questions');
+                inspirationContainer.innerHTML = '';
+                
+                data.questions.forEach(questionObj => {
+                    const questionElement = document.createElement('div');
+                    questionElement.className = 'inspiration-question';
+                    questionElement.textContent = questionObj.text;
+                    
+                    const countElement = document.createElement('span');
+                    countElement.className = 'question-count';
+                    countElement.textContent = questionObj.count;
+                    
+                    questionElement.appendChild(countElement);
+                    
+                    questionElement.addEventListener('click', () => {
+                        document.getElementById('whatif-input').value = questionObj.text;
+                    });
+                    
+                    inspirationContainer.appendChild(questionElement);
+                });
+            })
+            .catch(error => console.error('Error fetching inspiration questions:', error));
+    }
+
+    fetchInspirationQuestions();
+
+    function showLoadingAnimation() {
+        loadingAnimation.classList.add('show');
+    }
+
+    function hideLoadingAnimation() {
+        loadingAnimation.classList.remove('show');
+    }
 
     function handleSubmit() {
-        const question = input.value.trim();
+        const question = document.getElementById('whatif-input').value.trim();
         if (question) {
-            input.disabled = true;
-            submitBtn.disabled = true;
+            document.getElementById('whatif-input').disabled = true;
+            document.getElementById('submit-btn').disabled = true;
             showLoadingAnimation();
-            document.getElementById('share-btn').classList.add('hidden');  // Hide share button
+            document.getElementById('response-section').classList.add('hidden');
 
             fetch('/submit_question', {
                 method: 'POST',
@@ -39,32 +66,35 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(response => response.json())
             .then(data => {
-                hideLoadingAnimation();
-                showResponse(data.response);
-                input.disabled = false;
-                submitBtn.disabled = false;
-                input.value = '';
-                fetchInspirationQuestions(); // Refresh inspiration questions after submission
+                console.log('Data received from server:', data);
+                const minimumLoadingTime = 3000;
+                const loadingStartTime = Date.now();
+                const remainingLoadingTime = Math.max(0, minimumLoadingTime - (Date.now() - loadingStartTime));
+
+                setTimeout(() => {
+                    hideLoadingAnimation();
+                    if (data && data.response) {
+                        showResponse(data.response);
+                    } else {
+                        showResponse('Error: No response received from server.');
+                    }
+                    document.getElementById('whatif-input').disabled = false;
+                    document.getElementById('submit-btn').disabled = false;
+                    document.getElementById('whatif-input').value = '';
+                }, remainingLoadingTime);
             })
             .catch(error => {
                 console.error('Error:', error);
                 hideLoadingAnimation();
                 showResponse('An error occurred. Please try again.');
-                input.disabled = false;
-                submitBtn.disabled = false;
+                document.getElementById('whatif-input').disabled = false;
+                document.getElementById('submit-btn').disabled = false;
             });
         }
     }
 
-    function showLoadingAnimation() {
-        loadingAnimation.classList.remove('hidden');
-    }
-
-    function hideLoadingAnimation() {
-        loadingAnimation.classList.add('hidden');
-    }
-
     function showResponse(response) {
+        console.log('Raw response:', response);
         const responseSection = document.getElementById('response-section');
         const scenarioContent = document.getElementById('scenario-content');
         const consequencesTimeline = document.getElementById('consequences-timeline');
@@ -72,43 +102,50 @@ document.addEventListener('DOMContentLoaded', () => {
         const shareBtn = document.getElementById('share-btn');
 
         const parsedResponse = parseResponse(response);
+        console.log('Parsed response:', parsedResponse);
 
-        // Populate scenario
-        scenarioContent.textContent = parsedResponse.scenario;
+        if (!parsedResponse || !parsedResponse.scenario) {
+            scenarioContent.textContent = 'Error: Unable to parse the response. Please try again.';
+            consequencesTimeline.innerHTML = '';
+            analysisContent.textContent = '';
+        } else {
+            scenarioContent.textContent = parsedResponse.scenario;
 
-        // Populate consequences
-        consequencesTimeline.innerHTML = '';
-        parsedResponse.consequences.forEach((consequence, index) => {
-            const eventElement = document.createElement('div');
-            eventElement.className = 'consequence-event';
-            eventElement.innerHTML = `
-                <h4>Consequence ${index + 1}</h4>
-                <p>${consequence}</p>
-            `;
-            consequencesTimeline.appendChild(eventElement);
+            consequencesTimeline.innerHTML = '';
+            parsedResponse.consequences.forEach((consequence, index) => {
+                const eventElement = document.createElement('div');
+                eventElement.className = 'consequence-event';
+                eventElement.innerHTML = `
+                    <h4>Consequence ${index + 1}</h4>
+                    <p>${consequence}</p>
+                `;
+                consequencesTimeline.appendChild(eventElement);
+            });
 
-            // Add a fade-in animation
-            setTimeout(() => {
-                eventElement.style.opacity = '1';
-            }, index * 200);
-        });
-
-        // Populate analysis
-        analysisContent.textContent = parsedResponse.analysis;
+            analysisContent.textContent = parsedResponse.analysis;
+        }
 
         responseSection.classList.remove('hidden');
         shareBtn.classList.remove('hidden');
     }
 
     function parseResponse(response) {
+        console.log('Parsing response:', response);
+        
+        if (typeof response !== 'string') {
+            console.error('Response is not a string:', response);
+            return { scenario: 'Error parsing response', consequences: [], analysis: 'Please try again.' };
+        }
+
         const sections = response.split('\n\n');
         let scenario = '';
         let consequences = [];
         let analysis = '';
 
         // Parse Scenario
-        if (sections[0].startsWith('Scenario:')) {
-            scenario = sections[0].replace('Scenario:', '').trim();
+        const scenarioSection = sections.find(section => section.startsWith('Scenario:'));
+        if (scenarioSection) {
+            scenario = scenarioSection.replace('Scenario:', '').trim();
         }
 
         // Parse Consequences
@@ -129,64 +166,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return { scenario, consequences, analysis };
     }
-
-    function fetchInspirationQuestions() {
-        fetch('/get_inspiration_questions')
-            .then(response => response.json())
-            .then(data => {
-                displayInspirationQuestions(data.questions);
-            })
-            .catch(error => console.error('Error:', error));
-    }
-
-    function displayInspirationQuestions(questions) {
-        inspirationQuestions.innerHTML = '';
-        questions.forEach(question => {
-            const element = document.createElement('div');
-            element.classList.add('inspiration-question');
-            const questionText = question.text.replace('What if ', '').replace(' happened?', '');
-            element.innerHTML = `
-                ${questionText}
-                <span class="question-count">${question.count}</span>
-            `;
-            element.addEventListener('click', () => {
-                input.value = questionText;
-            });
-            inspirationQuestions.appendChild(element);
-        });
-    }
-
-    function animateInspirationQuestions() {
-        const questions = document.querySelectorAll('.inspiration-question');
-        questions.forEach((question, index) => {
-            setTimeout(() => {
-                question.style.opacity = '0';
-                setTimeout(() => {
-                    question.style.opacity = '1';
-                }, 500);
-            }, index * 1000);
-        });
-    }
-
-    function handleShare() {
-        const questionText = input.value;
-        const shareText = `I asked "What if ${questionText} didn't happen?" on Whatif in History. Check it out!`;
-        if (navigator.share) {
-            navigator.share({
-                title: 'Whatif in History',
-                text: shareText,
-                url: window.location.href,
-            }).then(() => console.log('Successful share'))
-            .catch((error) => console.log('Error sharing:', error));
-        } else {
-            alert('Sharing is not supported on this browser. You can copy this text:\n\n' + shareText);
-        }
-    }
-    
-    document.getElementById('share-btn').addEventListener('click', handleShare);
-
-    setInterval(animateInspirationQuestions, 5000);
-
-    // Initial fetch of inspiration questions
-    fetchInspirationQuestions();
 });
