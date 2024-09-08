@@ -1,15 +1,25 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, abort
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import sqlite3
 from datetime import datetime
 from collections import Counter
 import os
 from groq import Groq
 from dotenv import load_dotenv
+import bleach
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
+
+# Initialize rate limiter
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
 
 # Initialize Groq client
 client = Groq(
@@ -34,12 +44,24 @@ def index():
     return render_template('index.html')
 
 @app.route('/submit_question', methods=['POST'])
+@limiter.limit("5 per minute")
 def submit_question():
     data = request.json
     question = data.get('question')
     
+    if not question or len(question) > 500:
+        abort(400, description="Invalid input")
+    
+    # Thorough sanitization using bleach
+    allowed_tags = []  # No HTML tags allowed
+    allowed_attributes = {}  # No attributes allowed
+    cleaned_question = bleach.clean(question, tags=allowed_tags, attributes=allowed_attributes, strip=True)
+    
+    # Additional custom cleaning if needed
+    cleaned_question = cleaned_question.replace('\n', ' ').replace('\r', '').strip()
+    
     # Prepare the question for the AI model
-    ai_question = f"What if {question} happened?"
+    ai_question = f"What if {cleaned_question} happened?"
     
     # Make the API call
     chat_completion = client.chat.completions.create(
@@ -80,6 +102,7 @@ def get_background_questions():
     return jsonify({'questions': questions})
 
 @app.route('/get_inspiration_questions', methods=['GET'])
+@limiter.limit("10 per minute")
 def get_inspiration_questions():
     conn = sqlite3.connect('whatifdatabase.sqlite')
     c = conn.cursor()
@@ -103,4 +126,4 @@ def get_inspiration_questions():
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True)
+    app.run(debug=False)  # Set debug to False in production
