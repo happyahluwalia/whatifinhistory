@@ -4,12 +4,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingAnimation = document.getElementById('loading-animation');
     const responseContainer = document.getElementById('response-container');
     const inspirationQuestions = document.getElementById('inspiration-questions');
+    const questionBubbles = document.querySelectorAll('.question-bubble');
 
     submitBtn.addEventListener('click', handleSubmit);
     input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             handleSubmit();
         }
+    });
+
+    // Add click event listeners to question bubbles
+    questionBubbles.forEach(bubble => {
+        bubble.addEventListener('click', () => {
+            const question = bubble.getAttribute('data-question');
+            input.value = question;
+            input.focus();
+        });
     });
 
     function handleSubmit() {
@@ -55,8 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showResponse(response) {
+        const responseSection = document.getElementById('response-section');
+        responseSection.classList.remove('hidden');
+        responseSection.classList.add('fade-in');
         responseContainer.innerHTML = `<p>${response}</p>`;
-        responseContainer.classList.remove('hidden');
         document.getElementById('share-btn').classList.remove('hidden');
     }
 

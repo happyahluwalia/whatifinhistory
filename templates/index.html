@@ -3,25 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Whatif in History</title>
+    <title>WhatIfInHistory</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
     <div id="app">
-        <h1>Whatif in History</h1>
-        <div id="input-container">
-            <input type="text" id="whatif-input" placeholder="What if ______ didn't happen?">
-            <button id="submit-btn">Submit</button>
-        </div>
+        <header>
+            <h1>WhatIfInHistory</h1>
+            <p class="tagline">Rewrite the past, reimagine the future</p>
+        </header>
+        
+        <section id="intro">
+            <div class="intro-content">
+                <h2>Explore Alternate Histories</h2>
+                <p class="intro-text">"WhatIfInHistory" invites you to step into a world of possibilities where history unfolds differently.</p>
+                <div class="timeline-container">
+                    <div class="timeline"></div>
+                    <div class="example-questions">
+                        <div class="question-bubble" data-question="the airplane wasn't invented">
+                            <span class="year">1903</span>
+                            <span class="question-text">What if the airplane wasn't invented?</span>
+                        </div>
+                        <div class="question-bubble" data-question="the atomic bomb was never created">
+                            <span class="year">1945</span>
+                            <span class="question-text">What if the atomic bomb was never created?</span>
+                        </div>
+                        <div class="question-bubble" data-question="the internet was never developed">
+                            <span class="year">1983</span>
+                            <span class="question-text">What if the internet was never developed?</span>
+                        </div>
+                    </div>
+                </div>
+                <p> </p>
+                <p class="outro-text">Discover alternate timelines shaped by your imagination. Click on a question to get started or type your own!</p>
+            </div>
+        </section>
+
+        <section id="question-section">
+            <div id="input-container">
+                <input type="text" id="whatif-input" placeholder="What if ______ didn't happen?">
+                <button id="submit-btn"><i class="fas fa-paper-plane"></i> Ask </button>
+            </div>
+            <!-- <div class="g-recaptcha" data-sitekey="YOUR_RECAPTCHA_SITE_KEY"></div> -->
+        </section>
+
         <div id="loading-animation" class="hidden">
             <div class="clock"></div>
         </div>
-        <div id="response-container" class="hidden"></div>
-        <button id="share-btn" class="hidden">Share</button>
-        <div id="inspiration-container">
+
+        <section id="response-section" class="hidden">
+            <h2>Alternate Timeline</h2>
+            <div id="response-container"></div>
+            <button id="share-btn" class="hidden"><i class="fas fa-share-alt"></i> Share</button>
+        </section>
+
+        <section id="inspiration-container">
             <h2>Need Inspiration?</h2>
             <div id="inspiration-questions"></div>
-        </div>
+        </section>
     </div>
     <script src="/static/app.js"></script>
 </body>
