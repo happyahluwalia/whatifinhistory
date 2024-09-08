@@ -66,10 +66,68 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showResponse(response) {
         const responseSection = document.getElementById('response-section');
+        const scenarioContent = document.getElementById('scenario-content');
+        const consequencesTimeline = document.getElementById('consequences-timeline');
+        const analysisContent = document.getElementById('analysis-content');
+        const shareBtn = document.getElementById('share-btn');
+
+        const parsedResponse = parseResponse(response);
+
+        // Populate scenario
+        scenarioContent.textContent = parsedResponse.scenario;
+
+        // Populate consequences
+        consequencesTimeline.innerHTML = '';
+        parsedResponse.consequences.forEach((consequence, index) => {
+            const eventElement = document.createElement('div');
+            eventElement.className = 'consequence-event';
+            eventElement.innerHTML = `
+                <h4>Consequence ${index + 1}</h4>
+                <p>${consequence}</p>
+            `;
+            consequencesTimeline.appendChild(eventElement);
+
+            // Add a fade-in animation
+            setTimeout(() => {
+                eventElement.style.opacity = '1';
+            }, index * 200);
+        });
+
+        // Populate analysis
+        analysisContent.textContent = parsedResponse.analysis;
+
         responseSection.classList.remove('hidden');
-        responseSection.classList.add('fade-in');
-        responseContainer.innerHTML = `<p>${response}</p>`;
-        document.getElementById('share-btn').classList.remove('hidden');
+        shareBtn.classList.remove('hidden');
+    }
+
+    function parseResponse(response) {
+        const sections = response.split('\n\n');
+        let scenario = '';
+        let consequences = [];
+        let analysis = '';
+
+        // Parse Scenario
+        if (sections[0].startsWith('Scenario:')) {
+            scenario = sections[0].replace('Scenario:', '').trim();
+        }
+
+        // Parse Consequences
+        const consequencesSection = sections.find(section => section.startsWith('Consequences:'));
+        if (consequencesSection) {
+            const consequenceLines = consequencesSection.split('\n');
+            consequences = consequenceLines
+                .slice(1) // Skip the "Consequences:" header
+                .filter(line => line.trim() !== '')
+                .map(line => line.startsWith('- ') ? line.slice(2) : line);
+        }
+
+        // Parse Analysis
+        const analysisSection = sections.find(section => section.startsWith('Analysis:'));
+        if (analysisSection) {
+            analysis = analysisSection.replace('Analysis:', '').trim();
+        }
+
+        return { scenario, consequences, analysis };
     }
 
     function fetchInspirationQuestions() {

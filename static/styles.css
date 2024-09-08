@@ -285,27 +285,111 @@ h1 {
 }
 
 #response-section {
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.9);
     padding: 2rem;
     border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     margin-bottom: 2rem;
+}
+
+#response-section h2 {
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+#response-container > div {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+#response-container > div:last-child {
+    border-bottom: none;
+}
+
+#response-container h3 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+#scenario-content, #analysis-content {
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+#consequences-timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.consequence-event {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.consequence-event::before {
+    content: '';
+    position: absolute;
+    left: -30px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+}
+
+.consequence-event::after {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 17px;
+    width: 2px;
+    height: calc(100% + 10px);
+    background-color: var(--primary-color);
+}
+
+.consequence-event:last-child::after {
+    display: none;
+}
+
+.consequence-event h4 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
 }
 
 #share-btn {
     display: block;
-    margin: 1rem auto 0;
-    padding: 0.5rem 1rem;
+    margin: 2rem auto 0;
+    padding: 0.8rem 1.5rem;
     background-color: var(--secondary-color);
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
+    font-size: 1rem;
 }
 
 #share-btn:hover {
     background-color: #27ae60;
+}
+
+@media (max-width: 768px) {
+    #response-container {
+        padding-left: 0;
+    }
+
+    .event-year {
+        position: relative;
+        left: 0;
+        display: inline-block;
+        margin-bottom: 0.5rem;
+    }
+
+    .event-content {
+        padding-left: 0;
+    }
 }
 
 .hidden {

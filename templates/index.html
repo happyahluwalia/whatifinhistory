@@ -6,7 +6,7 @@
     <title>WhatIfInHistory</title>
     <link rel="stylesheet" href="/static/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/js/fontawesome.min.js" integrity="sha512-NeFv3hB6XGV+0y96NVxoWIkhrs1eC3KXBJ9OJiTFktvbzJ/0Kk7Rmm9hJ2/c2wJjy6wG0a0lIgehHjCTDLRwWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
@@ -56,7 +56,20 @@
 
         <section id="response-section" class="hidden">
             <h2>Alternate Timeline</h2>
-            <div id="response-container"></div>
+            <div id="response-container">
+                <div id="scenario-section">
+                    <h3>Scenario</h3>
+                    <p id="scenario-content"></p>
+                </div>
+                <div id="consequences-section">
+                    <h3>Consequences</h3>
+                    <div id="consequences-timeline"></div>
+                </div>
+                <div id="analysis-section">
+                    <h3>Analysis</h3>
+                    <p id="analysis-content"></p>
+                </div>
+            </div>
             <button id="share-btn" class="hidden"><i class="fas fa-share-alt"></i> Share</button>
         </section>
 

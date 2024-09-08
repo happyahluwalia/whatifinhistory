@@ -61,35 +61,31 @@ def submit_question():
     cleaned_question = cleaned_question.replace('\n', ' ').replace('\r', '').strip()
     
     # Prepare the question for the AI model
-    ai_question = f"What if {cleaned_question} happened?"
-    
-    # Make the API call
-    chat_completion = client.chat.completions.create(
+    prompt = f"""
+    Imagine an alternate timeline where {cleaned_question} didn't happen. 
+    Provide a response in the following format:
+
+    Scenario: Briefly describe the alternate scenario.
+
+    Consequences:
+    - List the first major consequence here.
+    - List the second major consequence here.
+    - Continue with 3-5 major consequences, each on a new line starting with a dash (-).
+
+    Analysis: Provide a brief analysis of the overall impact of this change on history.
+    """
+
+    response = client.chat.completions.create(
+        model="mixtral-8x7b-32768",
         messages=[
-            {
-                "role": "system",
-                "content": "You are an AI assistant with expertise in physics, philosophy, and science fiction. Your task is to help users explore and understand the implications of hypothetical time travel scenarios. Provide detailed insights on the potential consequences, paradoxes, and ethical considerations involved in each specific scenario, while maintaining a friendly and engaging conversation. Making it feel like a conversation, not just an AI answering a question. Make it interesting and engaging, and don't be too wordy.",
-            },
-            {
-                "role": "user",
-                "content": ai_question,
-            }
+            {"role": "system", "content": "You are a historian specializing in alternate history scenarios."},
+            {"role": "user", "content": prompt}
         ],
-        model="llama3-8b-8192",
+        max_tokens=1000,
+        temperature=0.7
     )
-    
-    # Extract the response
-    response = chat_completion.choices[0].message.content
-    
-    # Store in database
-    conn = sqlite3.connect('whatifdatabase.sqlite')
-    c = conn.cursor()
-    c.execute("INSERT INTO questions (user_id, prompt, created_at, response, additional_info) VALUES (?, ?, ?, ?, ?)",
-              ('1', ai_question, datetime.now(), response, None))
-    conn.commit()
-    conn.close()
-    
-    return jsonify({'response': response})
+
+    return jsonify({'response': response.choices[0].message.content})
 
 @app.route('/get_background_questions', methods=['GET'])
 def get_background_questions():
