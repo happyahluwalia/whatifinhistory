@@ -42,11 +42,12 @@
         </section>
 
         <section id="question-section">
-            <div id="input-container">
-                <input type="text" id="whatif-input" placeholder="What if ______ didn't happen?">
-                <button id="submit-btn"><i class="fas fa-paper-plane"></i> Ask </button>
-            </div>
-            <!-- <div class="g-recaptcha" data-sitekey="YOUR_RECAPTCHA_SITE_KEY"></div> -->
+            <form id="questionForm">
+                <textarea id="questionInput" name="question" minlength="10" maxlength="500" required></textarea>
+                <button type="submit">Submit</button>
+            </form>
+            <p id="validationMessage" style="color: red;"></p>
+            <!-- <div class="g-recaptcha" data-sitekey="RECAPTCHA_SITE_KEY"></div> -->
         </section>
 
         <div id="loading-animation">

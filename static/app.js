@@ -1,14 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const input = document.getElementById('whatif-input');
-    const submitBtn = document.getElementById('submit-btn');
+    const input = document.getElementById('questionInput');
+    const submitBtn = document.querySelector('#questionForm button[type="submit"]');
     const loadingAnimation = document.getElementById('loading-animation');
 
-    submitBtn.addEventListener('click', handleSubmit);
-    input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            handleSubmit();
-        }
-    });
+    if (submitBtn) {
+        submitBtn.addEventListener('click', handleSubmit);
+    }
+
+    if (input) {
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit();
+            }
+        });
+    }
 
     // Add event listeners to question bubbles
     const questionBubbles = document.querySelectorAll('.question-bubble');
@@ -40,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     questionElement.appendChild(countElement);
                     
                     questionElement.addEventListener('click', () => {
-                        document.getElementById('whatif-input').value = questionObj.text;
+                        document.getElementById('questionInput').value = questionObj.text;
                     });
                     
                     inspirationContainer.appendChild(questionElement);
@@ -52,55 +58,76 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchInspirationQuestions();
 
     function showLoadingAnimation() {
-        loadingAnimation.classList.add('show');
+        document.getElementById('loading-animation').classList.add('show');
+        document.getElementById('question-section').classList.add('hidden');
     }
 
     function hideLoadingAnimation() {
-        loadingAnimation.classList.remove('show');
+        document.getElementById('loading-animation').classList.remove('show');
+        document.getElementById('question-section').classList.remove('hidden');
     }
 
-    function handleSubmit() {
-        const question = document.getElementById('whatif-input').value.trim();
-        if (question) {
-            document.getElementById('whatif-input').disabled = true;
-            document.getElementById('submit-btn').disabled = true;
-            showLoadingAnimation();
-            document.getElementById('response-section').classList.add('hidden');
-
-            fetch('/submit_question', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ question: question }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Data received from server:', data);
-                const minimumLoadingTime = 3000;
-                const loadingStartTime = Date.now();
-                const remainingLoadingTime = Math.max(0, minimumLoadingTime - (Date.now() - loadingStartTime));
-
-                setTimeout(() => {
-                    hideLoadingAnimation();
-                    if (data && data.response) {
-                        showResponse(data.response);
-                    } else {
-                        showResponse('Error: No response received from server.');
-                    }
-                    document.getElementById('whatif-input').disabled = false;
-                    document.getElementById('submit-btn').disabled = false;
-                    document.getElementById('whatif-input').value = '';
-                }, remainingLoadingTime);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                hideLoadingAnimation();
-                showResponse('An error occurred. Please try again.');
-                document.getElementById('whatif-input').disabled = false;
-                document.getElementById('submit-btn').disabled = false;
-            });
+    function handleSubmit(e) {
+        if (e) e.preventDefault();
+        
+        const input = document.getElementById('questionInput');
+        if (!input) {
+            console.error('Question input not found');
+            return;
         }
+        
+        const question = input.value.trim();
+        if (!question) {
+            console.error('Question is empty');
+            return;
+        }
+        
+        showLoadingAnimation();
+        
+        fetch('/submit_question', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ question: question }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoadingAnimation();
+            displayResponse(data.response);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            hideLoadingAnimation();
+            alert('An error occurred while submitting your question. Please try again.');
+        });
+    }
+
+    function displayResponse(response) {
+        const responseSection = document.getElementById('response-section');
+        const questionSection = document.getElementById('question-section');
+        if (!responseSection || !questionSection) {
+            console.error('Response or question section not found');
+            return;
+        }
+        
+        const parsedResponse = parseResponse(response);
+        
+        document.getElementById('scenario-content').textContent = parsedResponse.scenario || 'No scenario provided';
+        
+        const consequencesTimeline = document.getElementById('consequences-timeline');
+        consequencesTimeline.innerHTML = '';
+        (parsedResponse.consequences || []).forEach(consequence => {
+            const consequenceElement = document.createElement('div');
+            consequenceElement.className = 'consequence';
+            consequenceElement.textContent = consequence;
+            consequencesTimeline.appendChild(consequenceElement);
+        });
+        
+        document.getElementById('analysis-content').textContent = parsedResponse.analysis || 'No analysis provided';
+        
+        responseSection.classList.remove('hidden');
+        questionSection.classList.remove('hidden');
     }
 
     function showResponse(response) {
@@ -177,3 +204,48 @@ document.addEventListener('DOMContentLoaded', () => {
         return { scenario, consequences, analysis };
     }
 });
+
+document.getElementById('questionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const question = document.getElementById('questionInput').value;
+    const validationMessage = document.getElementById('validationMessage');
+    
+    // Clear previous validation message
+    validationMessage.textContent = '';
+    
+    // Validate question length
+    if (question.length < 10 || question.length > 500) {
+        validationMessage.textContent = 'Question must be between 10 and 500 characters.';
+        return;
+    }
+    
+    // Validate allowed characters using regex
+    const allowedCharsRegex = /^[a-zA-Z0-9\s\.\,\?\!]+$/;
+    if (!allowedCharsRegex.test(question)) {
+        validationMessage.textContent = 'Question contains disallowed characters.';
+        return;
+    }
+    
+    // If validation passes, submit the form
+    submitQuestion(question);
+});
+
+function submitQuestion(question) {
+    // Your existing AJAX call to submit the question
+    fetch('/submit_question', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ question: question }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Handle the response
+        console.log(data);
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+}
