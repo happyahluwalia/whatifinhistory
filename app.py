@@ -112,6 +112,15 @@ def submit_question():
     """
 
     try:
+        # Get the user's IP address
+        user_ip = request.remote_addr
+
+        # Store the question in the database with user_ip as user_id
+        with get_db_connection() as conn:
+            conn.execute("INSERT INTO questions (user_id, prompt, created_at) VALUES (?, ?, ?)", 
+                         (user_ip, cleaned_question, datetime.now()))
+            conn.commit()
+
         response = client.chat.completions.create(
             model="mixtral-8x7b-32768",
             messages=[
@@ -121,12 +130,6 @@ def submit_question():
             max_tokens=1000,
             temperature=0.7
         )
-
-        # Store the question in the database
-        with get_db_connection() as conn:
-            conn.execute("INSERT INTO questions (prompt, created_at) VALUES (?, ?)", 
-                         (cleaned_question, datetime.now()))
-            conn.commit()
 
         return jsonify({'response': response.choices[0].message.content})
     except Exception as e:
