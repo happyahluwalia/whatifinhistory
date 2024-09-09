@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch('/get_inspiration_questions')
             .then(response => response.json())
             .then(data => {
-                console.log('Inspiration data received:', data);
                 const inspirationContainer = document.getElementById('inspiration-questions');
                 inspirationContainer.innerHTML = '';
                 
@@ -91,15 +90,27 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             body: JSON.stringify({ question: question }),
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 429) {
+                    throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
+                }
+                throw new Error('Server error: ' + response.status);
+            }
+            return response.json();
+        })
         .then(data => {
             hideLoadingAnimation();
-            displayResponse(data.response);
+            if (data.response) {
+                displayResponse(data.response);
+            } else {
+                throw new Error('Invalid response from server');
+            }
         })
         .catch(error => {
             console.error('Error:', error);
             hideLoadingAnimation();
-            alert('An error occurred while submitting your question. Please try again.');
+            displayErrorMessage(error.message);
         });
     }
 
@@ -116,30 +127,41 @@ document.addEventListener('DOMContentLoaded', () => {
         // Clear previous content
         responseSection.innerHTML = '';
         
-        // Create and append scenario section
-        const scenarioSection = createSection('Scenario', parsedResponse.scenario);
-        responseSection.appendChild(scenarioSection);
+        if (parsedResponse.scenario) {
+            const scenarioSection = createSection('Scenario', parsedResponse.scenario);
+            responseSection.appendChild(scenarioSection);
+        }
         
-        // Create and append consequences section
-        const consequencesSection = createSection('Consequences', null);
-        const consequencesList = document.createElement('ul');
-        parsedResponse.consequences.forEach(consequence => {
-            const li = document.createElement('li');
-            li.textContent = consequence;
-            consequencesList.appendChild(li);
-        });
-        consequencesSection.appendChild(consequencesList);
-        responseSection.appendChild(consequencesSection);
+        if (parsedResponse.consequences && parsedResponse.consequences.length > 0) {
+            const consequencesSection = createSection('Consequences', null);
+            const consequencesList = document.createElement('ul');
+            parsedResponse.consequences.forEach(consequence => {
+                const li = document.createElement('li');
+                li.textContent = consequence;
+                consequencesList.appendChild(li);
+            });
+            consequencesSection.appendChild(consequencesList);
+            responseSection.appendChild(consequencesSection);
+        }
         
-        // Create and append analysis section
-        const analysisSection = createSection('Analysis', parsedResponse.analysis);
-        responseSection.appendChild(analysisSection);
+        if (parsedResponse.analysis) {
+            const analysisSection = createSection('Analysis', parsedResponse.analysis);
+            responseSection.appendChild(analysisSection);
+        }
+        
+        // If no sections were added, display the raw response
+        if (responseSection.children.length === 0) {
+            const rawResponseSection = createSection('Response', response);
+            responseSection.appendChild(rawResponseSection);
+        }
         
         // Add animations
         animateSections();
         
         responseSection.classList.remove('hidden');
         questionSection.classList.remove('hidden');
+        
+        addNewQuestionButton();
     }
 
     function createSection(title, content) {
@@ -167,78 +189,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function showResponse(response) {
-        console.log('Raw response:', response);
-        const responseSection = document.getElementById('response-section');
-        const scenarioContent = document.getElementById('scenario-content');
-        const consequencesTimeline = document.getElementById('consequences-timeline');
-        const analysisContent = document.getElementById('analysis-content');
-        const shareBtn = document.getElementById('share-btn');
-
-        const parsedResponse = parseResponse(response);
-        console.log('Parsed response:', parsedResponse);
-
-        if (!parsedResponse || !parsedResponse.scenario) {
-            scenarioContent.textContent = 'Error: Unable to parse the response. Please try again.';
-            consequencesTimeline.innerHTML = '';
-            analysisContent.textContent = '';
-        } else {
-            scenarioContent.textContent = parsedResponse.scenario;
-
-            consequencesTimeline.innerHTML = '';
-            parsedResponse.consequences.forEach((consequence, index) => {
-                const eventElement = document.createElement('div');
-                eventElement.className = 'consequence-event';
-                eventElement.innerHTML = `
-                    <h4>Consequence ${index + 1}</h4>
-                    <p>${consequence}</p>
-                `;
-                consequencesTimeline.appendChild(eventElement);
-            });
-
-            analysisContent.textContent = parsedResponse.analysis;
-        }
-
-        responseSection.classList.remove('hidden');
-        shareBtn.classList.remove('hidden');
-    }
-
     function parseResponse(response) {
-        console.log('Parsing response:', response);
-        
         if (typeof response !== 'string') {
             console.error('Response is not a string:', response);
-            return { scenario: 'Error parsing response', consequences: [], analysis: 'Please try again.' };
+            return { rawResponse: JSON.stringify(response) };
         }
-
+        
         const sections = response.split('\n\n');
-        let scenario = '';
-        let consequences = [];
-        let analysis = '';
+        const parsed = {
+            scenario: '',
+            consequences: [],
+            analysis: ''
+        };
+        
+        sections.forEach(section => {
+            if (section.startsWith('Scenario:')) {
+                parsed.scenario = section.replace('Scenario:', '').trim();
+            } else if (section.startsWith('Consequences:')) {
+                parsed.consequences = section.split('\n').slice(1).map(c => c.replace(/^-\s*/, '').trim());
+            } else if (section.startsWith('Analysis:')) {
+                parsed.analysis = section.replace('Analysis:', '').trim();
+            }
+        });
+        
+        return parsed;
+    }
 
-        // Parse Scenario
-        const scenarioSection = sections.find(section => section.startsWith('Scenario:'));
-        if (scenarioSection) {
-            scenario = scenarioSection.replace('Scenario:', '').trim();
-        }
-
-        // Parse Consequences
-        const consequencesSection = sections.find(section => section.startsWith('Consequences:'));
-        if (consequencesSection) {
-            const consequenceLines = consequencesSection.split('\n');
-            consequences = consequenceLines
-                .slice(1) // Skip the "Consequences:" header
-                .filter(line => line.trim() !== '')
-                .map(line => line.startsWith('- ') ? line.slice(2) : line);
-        }
-
-        // Parse Analysis
-        const analysisSection = sections.find(section => section.startsWith('Analysis:'));
-        if (analysisSection) {
-            analysis = analysisSection.replace('Analysis:', '').trim();
-        }
-
-        return { scenario, consequences, analysis };
+    function addNewQuestionButton() {
+        const button = document.createElement('button');
+        button.textContent = 'Ask Another Question';
+        button.className = 'new-question-btn';
+        button.addEventListener('click', () => {
+            document.getElementById('response-section').classList.add('hidden');
+            document.getElementById('questionInput').value = '';
+            document.getElementById('questionInput').focus();
+        });
+        document.getElementById('response-section').appendChild(button);
     }
 });
 
@@ -287,17 +273,14 @@ function submitQuestion(question) {
     });
 }
 
-function addNewQuestionButton() {
-    const button = document.createElement('button');
-    button.textContent = 'Ask Another Question';
-    button.className = 'new-question-btn';
-    button.addEventListener('click', () => {
-        document.getElementById('response-section').classList.add('hidden');
-        document.getElementById('questionInput').value = '';
-        document.getElementById('questionInput').focus();
-    });
-    document.getElementById('response-section').appendChild(button);
+function displayErrorMessage(message) {
+    const errorElement = document.getElementById('error-message');
+    if (!errorElement) {
+        const errorDiv = document.createElement('div');
+        errorDiv.id = 'error-message';
+        errorDiv.style.color = 'red';
+        errorDiv.style.marginTop = '10px';
+        document.getElementById('question-section').appendChild(errorDiv);
+    }
+    document.getElementById('error-message').textContent = message;
 }
-
-// Call this function at the end of displayResponse
-addNewQuestionButton();

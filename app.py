@@ -1,10 +1,10 @@
+import os
 from flask import Flask, request, jsonify, render_template, abort
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import sqlite3
 from datetime import datetime
 from collections import Counter
-import os
 from groq import Groq
 from dotenv import load_dotenv
 import bleach
@@ -12,7 +12,7 @@ import re
 import logging
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_talisman import Talisman
-import config  # Import the config file
+import config
 
 # Load environment variables from .env file (for development only)
 if os.getenv('FLASK_ENV') == 'development':
@@ -36,11 +36,9 @@ limiter = Limiter(
 )
 
 # Initialize Groq client
-client = Groq(
-    api_key=os.getenv("GROQ_API_KEY")
-)
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-# Configure Flask-Talisman with a CSP that allows images from replicate.delivery
+# Configure Flask-Talisman with a CSP that allows necessary resources
 csp = {
     'default-src': "'self'",
     'script-src': "'self' https://cdnjs.cloudflare.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/",
@@ -50,37 +48,35 @@ csp = {
     'connect-src': "'self'"
 }
 
-Talisman(app, content_security_policy=csp)
+Talisman(app, content_security_policy=csp, force_https=True)
 
-
-#Talisman(app)  # This adds security headers to all responses
-
-# Enable HTTPS
-Talisman(app, content_security_policy={
-    'default-src': "'self'",
-    'script-src': "'self' 'unsafe-inline'",
-    'style-src': "'self' 'unsafe-inline'",
-})
+def get_db_connection():
+    """Create a database connection and return the connection object."""
+    conn = sqlite3.connect('whatifdatabase.sqlite')
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def init_db():
-    with sqlite3.connect('whatifdatabase.sqlite') as conn:
-        c = conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS questions
-                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                      user_id TEXT,
-                      prompt TEXT,
-                      created_at DATETIME,
-                      response TEXT,
-                      additional_info TEXT)''')
+    """Initialize the database with necessary tables."""
+    with get_db_connection() as conn:
+        conn.execute('''CREATE TABLE IF NOT EXISTS questions
+                        (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                         user_id TEXT,
+                         prompt TEXT,
+                         created_at DATETIME,
+                         response TEXT,
+                         additional_info TEXT)''')
         conn.commit()
 
 @app.route('/')
 def index():
+    """Render the main page."""
     return render_template('index.html')
 
 @app.route('/submit_question', methods=['POST'])
-@limiter.limit("5 per minute")
+@limiter.limit(config.RATE_LIMIT_MINUTE)
 def submit_question():
+    """Handle question submission and generate AI response."""
     data = request.json
     question = data.get('question', '')
     
@@ -127,37 +123,25 @@ def submit_question():
         )
 
         # Store the question in the database
-        with sqlite3.connect('whatifdatabase.sqlite') as conn:
-            c = conn.cursor()
-            c.execute("INSERT INTO questions (prompt, created_at) VALUES (?, ?)", 
-                      (cleaned_question, datetime.now()))
+        with get_db_connection() as conn:
+            conn.execute("INSERT INTO questions (prompt, created_at) VALUES (?, ?)", 
+                         (cleaned_question, datetime.now()))
             conn.commit()
 
         return jsonify({'response': response.choices[0].message.content})
     except Exception as e:
         app.logger.error(f"Error processing request: {str(e)}")
-        abort(500, description="An error occurred while processing your request")
+        return jsonify({'error': 'An error occurred while processing your request'}), 500
 
 @app.route('/get_inspiration_questions', methods=['GET'])
-@limiter.limit("10 per minute")
+@limiter.limit(config.RATE_LIMIT_MINUTE)
 def get_inspiration_questions():
+    """Fetch and return popular questions for inspiration."""
     try:
-        with sqlite3.connect('whatifdatabase.sqlite') as conn:
-            c = conn.cursor()
-            c.execute("SELECT prompt FROM questions")
-            all_questions = [row[0] for row in c.fetchall()]
+        with get_db_connection() as conn:
+            questions = conn.execute("SELECT prompt, COUNT(*) as count FROM questions GROUP BY prompt ORDER BY count DESC LIMIT 20").fetchall()
         
-        # Count occurrences of each question
-        question_counts = Counter(all_questions)
-        
-        # Sort questions by count (popularity) in descending order
-        sorted_questions = sorted(question_counts.items(), key=lambda x: x[1], reverse=True)
-        
-        # Take the top 20 questions
-        top_questions = sorted_questions[:20]
-        
-        # Format the questions with their counts
-        formatted_questions = [{"text": q, "count": c} for q, c in top_questions]
+        formatted_questions = [{"text": q['prompt'], "count": q['count']} for q in questions]
         
         return jsonify({'questions': formatted_questions})
     except Exception as e:
@@ -166,14 +150,17 @@ def get_inspiration_questions():
 
 @app.errorhandler(429)
 def ratelimit_handler(e):
+    """Handle rate limit exceeded errors."""
     return jsonify(error="Rate limit exceeded. Please try again later."), 429
 
 @app.errorhandler(400)
 def bad_request_handler(e):
+    """Handle bad request errors."""
     return jsonify(error=str(e.description)), 400
 
 @app.errorhandler(500)
 def internal_server_error_handler(e):
+    """Handle internal server errors."""
     return jsonify(error="An internal server error occurred."), 500
 
 if __name__ == '__main__':
