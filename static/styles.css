@@ -529,3 +529,59 @@ h1 {
     text-align: center;
 }
 
+.response-section {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+}
+
+.response-section h3 {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+}
+
+.response-section p, .response-section ul {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.response-section ul {
+    padding-left: 20px;
+}
+
+.response-section li {
+    margin-bottom: 10px;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.new-question-btn {
+    display: block;
+    margin: 20px auto 0;
+    padding: 10px 20px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.new-question-btn:hover {
+    background-color: darken(var(--secondary-color), 10%);
+}
+

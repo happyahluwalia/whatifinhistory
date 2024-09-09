@@ -113,21 +113,58 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const parsedResponse = parseResponse(response);
         
-        document.getElementById('scenario-content').textContent = parsedResponse.scenario || 'No scenario provided';
+        // Clear previous content
+        responseSection.innerHTML = '';
         
-        const consequencesTimeline = document.getElementById('consequences-timeline');
-        consequencesTimeline.innerHTML = '';
-        (parsedResponse.consequences || []).forEach(consequence => {
-            const consequenceElement = document.createElement('div');
-            consequenceElement.className = 'consequence';
-            consequenceElement.textContent = consequence;
-            consequencesTimeline.appendChild(consequenceElement);
+        // Create and append scenario section
+        const scenarioSection = createSection('Scenario', parsedResponse.scenario);
+        responseSection.appendChild(scenarioSection);
+        
+        // Create and append consequences section
+        const consequencesSection = createSection('Consequences', null);
+        const consequencesList = document.createElement('ul');
+        parsedResponse.consequences.forEach(consequence => {
+            const li = document.createElement('li');
+            li.textContent = consequence;
+            consequencesList.appendChild(li);
         });
+        consequencesSection.appendChild(consequencesList);
+        responseSection.appendChild(consequencesSection);
         
-        document.getElementById('analysis-content').textContent = parsedResponse.analysis || 'No analysis provided';
+        // Create and append analysis section
+        const analysisSection = createSection('Analysis', parsedResponse.analysis);
+        responseSection.appendChild(analysisSection);
+        
+        // Add animations
+        animateSections();
         
         responseSection.classList.remove('hidden');
         questionSection.classList.remove('hidden');
+    }
+
+    function createSection(title, content) {
+        const section = document.createElement('div');
+        section.className = 'response-section';
+        
+        const titleElement = document.createElement('h3');
+        titleElement.textContent = title;
+        section.appendChild(titleElement);
+        
+        if (content) {
+            const contentElement = document.createElement('p');
+            contentElement.textContent = content;
+            section.appendChild(contentElement);
+        }
+        
+        return section;
+    }
+
+    function animateSections() {
+        const sections = document.querySelectorAll('.response-section');
+        sections.forEach((section, index) => {
+            section.style.animation = `fadeInUp 0.5s ease-out ${index * 0.2}s forwards`;
+            section.style.opacity = '0';
+        });
     }
 
     function showResponse(response) {
@@ -249,3 +286,18 @@ function submitQuestion(question) {
         console.error('Error:', error);
     });
 }
+
+function addNewQuestionButton() {
+    const button = document.createElement('button');
+    button.textContent = 'Ask Another Question';
+    button.className = 'new-question-btn';
+    button.addEventListener('click', () => {
+        document.getElementById('response-section').classList.add('hidden');
+        document.getElementById('questionInput').value = '';
+        document.getElementById('questionInput').focus();
+    });
+    document.getElementById('response-section').appendChild(button);
+}
+
+// Call this function at the end of displayResponse
+addNewQuestionButton();
