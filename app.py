@@ -41,10 +41,10 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 # Configure Flask-Talisman with a CSP that allows necessary resources
 csp = {
     'default-src': "'self'",
-    'script-src': "'self' https://cdnjs.cloudflare.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/",
+    'script-src': "'self' https://cdnjs.cloudflare.com https://static.getclicky.com/js https://in.getclicky.com/in.php",
     'style-src': "'self' 'unsafe-inline' https://fonts.googleapis.com",
     'font-src': "'self' https://fonts.gstatic.com",
-    'img-src': "'self' data:",
+    'img-src': "'self' data: https://static.getclicky.com/image https://static.getclicky.com/media/links/badge.gif",
     'connect-src': "'self'"
 }
 
