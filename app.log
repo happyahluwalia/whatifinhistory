@@ -173,3 +173,12 @@
 2024-09-08 23:05:28,396 INFO: 127.0.0.1 - - [08/Sep/2024 23:05:28] "[36mGET /static/styles.css HTTP/1.1[0m" 304 - [in /Users/happy/whatif/venv/lib/python3.10/site-packages/werkzeug/_internal.py:97]
 2024-09-08 23:05:28,397 INFO: 127.0.0.1 - - [08/Sep/2024 23:05:28] "[36mGET /static/app.js HTTP/1.1[0m" 304 - [in /Users/happy/whatif/venv/lib/python3.10/site-packages/werkzeug/_internal.py:97]
 2024-09-08 23:05:28,480 INFO: 127.0.0.1 - - [08/Sep/2024 23:05:28] "GET /get_inspiration_questions HTTP/1.1" 200 - [in /Users/happy/whatif/venv/lib/python3.10/site-packages/werkzeug/_internal.py:97]
+2024-09-08 23:41:12,175 INFO: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on https://127.0.0.1:5000 [in /Users/happy/whatif/venv/lib/python3.10/site-packages/werkzeug/_internal.py:97]
+2024-09-08 23:41:12,175 INFO: [33mPress CTRL+C to quit[0m [in /Users/happy/whatif/venv/lib/python3.10/site-packages/werkzeug/_internal.py:97]
+2024-09-08 23:41:23,278 INFO: 127.0.0.1 - - [08/Sep/2024 23:41:23] "GET / HTTP/1.1" 200 - [in /Users/happy/whatif/venv/lib/python3.10/site-packages/werkzeug/_internal.py:97]
+2024-09-08 23:41:23,361 INFO: 127.0.0.1 - - [08/Sep/2024 23:41:23] "[36mGET /static/app.js HTTP/1.1[0m" 304 - [in /Users/happy/whatif/venv/lib/python3.10/site-packages/werkzeug/_internal.py:97]
+2024-09-08 23:41:23,364 INFO: 127.0.0.1 - - [08/Sep/2024 23:41:23] "[36mGET /static/styles.css HTTP/1.1[0m" 304 - [in /Users/happy/whatif/venv/lib/python3.10/site-packages/werkzeug/_internal.py:97]
+2024-09-08 23:41:23,382 INFO: 127.0.0.1 - - [08/Sep/2024 23:41:23] "GET /get_inspiration_questions HTTP/1.1" 200 - [in /Users/happy/whatif/venv/lib/python3.10/site-packages/werkzeug/_internal.py:97]
+2024-09-08 23:41:30,490 INFO: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK" [in /Users/happy/whatif/venv/lib/python3.10/site-packages/httpx/_client.py:1038]
+2024-09-08 23:41:30,499 INFO: 127.0.0.1 - - [08/Sep/2024 23:41:30] "POST /submit_question HTTP/1.1" 200 - [in /Users/happy/whatif/venv/lib/python3.10/site-packages/werkzeug/_internal.py:97]
